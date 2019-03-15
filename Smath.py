@@ -1,4 +1,7 @@
 
+pi = 3.14159265359
+e = 2.71828
+
 def sqrt(n):
     """
     Finds the square root of the number given.
@@ -145,7 +148,7 @@ def standard_deviation(nums, avg):
 def factorial(n):
     """
     Tells the value of n!
-    :param n: number
+    :param n: number to be factorial
     :type n: int
     :return: n!
     :rtype: int
@@ -155,3 +158,34 @@ def factorial(n):
             return 1
         else:
             return n * factorial(n-1)
+    else:
+        return 1
+
+
+def nPr(n, r):
+    """
+    Permuter gives number of permutations of r numbers from a selection
+    of n points. Order does matter.
+    :param n: total number of data points available to use
+    :type n: int
+    :param r: number of points actually used
+    :type r: int
+    :return: number of permutations using r numbers of n points
+    :rtype: int
+    """
+    return int(factorial(n)/factorial(n-r))
+
+
+def nCr(n, r):
+    """
+    Chooser gives number of combinations of r numbers from a selection
+    of n points. Order does not matter.
+    :param n: total number of ddata points available to use
+    :type n: int
+    :param r: number of points actually used
+    :type r: int
+    :return: number of combinations using r numbers of n points
+    :rtype: int
+    """
+    return int(factorial(n)/(factorial(r) * factorial(n-r)))
+
