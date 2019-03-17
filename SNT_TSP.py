@@ -1,6 +1,7 @@
 import itertools
 import Smath
 import time
+import random
 
 # Number of nodes/cities for problem
 tsp_size = 14
@@ -19,15 +20,15 @@ def main():
     # print('Min/Max vals:', minmax_vals)
 
     # Admin
-    number_of_nodes = int(input('How many cities are there (<= 14): '))
-    number_of_stops = int(input('How many to visit (<= above): '))
+    number_of_nodes = int(input('How many cities are there (1 <= x <= 14): '))
+    number_of_stops = int(input('How many to visit (2 <= x <= above): '))
 
     # Histogram
     # Absolute min/max round trip costs.
     min_cost_rt = min_cost11 * number_of_nodes
     max_cost_rt = max_cost11 * number_of_nodes
     # Bin size depend on number of bins (user input) and abs min/max
-    n_bins = int(input('How many bins for histogram (> 100): '))
+    n_bins = int(input('How many bins for histogram ( x >= 100): '))
     bins = [0 for i in range(n_bins)]
     cost_range = max_cost_rt - min_cost_rt
     dx = cost_range / n_bins
@@ -43,7 +44,19 @@ def main():
     # MCT = ()  # Tuple, route w MC
 
     # Big loop
-    exhaustive_search(node_list, number_of_stops, distances, sumx, sumxx, bins, min_cost_rt, dx, number_of_nodes)
+    selection = input('1. Exhaustive Search\n'
+                      '2. Random Search\n'
+                      '3. Genetic Algorithm\n'
+                      '4. Simulated Annealing\n'
+                      'Select an option above by typing the number and pressing Enter: ')
+    if selection == '1':
+        exhaustive_search(node_list, number_of_stops, distances, sumx, sumxx, bins, min_cost_rt, dx, number_of_nodes)
+    elif selection == '2':
+        randomized(distances, sumx, sumxx, bins, min_cost_rt, dx)
+    elif selection == '3':
+        pass
+    elif selection == '4':
+        pass
 
     # Stop exiting
     input('Press Enter to quit: ')
@@ -117,36 +130,112 @@ def get_minmax(dist):
 
 
 def exhaustive_search(node_list, number_of_stops, distances, sumx, sumxx, bins, min_cost_rt, dx, number_of_nodes):
+    """
+    Exhaustive search for TSP. Simulates all possible combinations of cities chosen.
+    :param node_list:
+    :param number_of_stops:
+    :param distances:
+    :param sumx:
+    :param sumxx:
+    :param bins:
+    :param min_cost_rt:
+    :param dx:
+    :param number_of_nodes:
+    :return:
+    """
+
+    # Initialize LC, MC
+    LC = 100
+    MC = 0
+
     # This is it: The big loop
     # Start timer
     start = time.time()
 
-    # suggest starting here
-    # params:
-
-
     for route in itertools.permutations(node_list, number_of_stops):
-        # print('Route:', route)
+
+        if route[0] < route[-1]:
+            # print('Route:', route)
+            this_dist = 0
+
+            # Find the cost of a round trip
+            for stop in range(len(route)):
+                if stop != len(route) - 1:      # if its not the last node
+                    this_dist += distances[route[stop]][route[stop+1]]
+                else:       # Add cost from last item to first item
+                    this_dist += distances[route[stop]][route[0]]
+
+            # print('Round trip distance', this_dist)
+
+            # Keep totals
+            sumx += this_dist
+            sumxx += this_dist ** 2
+
+            # Update min/max
+            if this_dist < LC:
+                LC = this_dist
+                LCT = route
+                print('New low:', LCT, 'Distance:', LC)
+            elif this_dist > MC:
+                MC = this_dist
+                MCT = route
+                print('New high:', MCT, 'Distance:', MC)
+
+            # Sort cost into bin for histogram of frequencies
+            bins[int((this_dist - min_cost_rt)/dx)] += 1
+
+            # print('Route:', route)
+
+    # Stop timer
+    end = time.time()
+
+    print('\nSum:', sumx)
+    print('Sum squared x:', sumxx)
+    n = Smath.nPr(number_of_nodes, number_of_stops)
+    print('Number of routes:', n)
+    print('Average cost:', sumx / n)
+    stdev = Smath.sqrt((sumxx - ((sumx ** 2) / n)) / n)
+    print('Standard deviation:', stdev)
+    print('Least cost:', LC)
+    print('Least cost trip:', LCT)
+    print('Most cost:', MC)
+    print('Most cost trip:', MCT)
+    print('Bins:', bins)
+    print('Time:', end - start, 'seconds')
+
+
+def randomized(distances, sumx, sumxx, bins, min_cost_rt, dx):
+    """
+    Generates bigN number of randomized trip orders. Checks the
+    :param distances:
+    :param sumx:
+    :param sumxx:
+    :param bins:
+    :param min_cost_rt:
+    :param dx:
+    :return:
+    """
+
+    route = [i for i in range(14)]
+    bigN = 1000
+    LC = 100
+    MC = 0
+
+    # Start timer
+    start = time.time()
+
+    for j in range(bigN):
         this_dist = 0
+        route = shuffle(route)
+        # print('Route:', route)
 
-        # Find the cost of a round trip
+        # Get the distance for the route
         for stop in range(len(route)):
-            if stop != len(route) - 1:      # if its not the last node
-                this_dist += distances[route[stop]][route[stop+1]]
-            else:       # Add cost from last item to first item
+            if stop != len(route) - 1:  # if its not the last node
+                this_dist += distances[route[stop]][route[stop + 1]]
+            else:  # Add cost from last item to first item
                 this_dist += distances[route[stop]][route[0]]
-
-        # print('Round trip distance', this_dist)
-
-        # Initialize LeastCost and MostCost
-        # if total distance is 0, ie before you actually visited any nodes
-        # sets LC, MC to first cost
-        # sets LCT, MCT to first route
-        if sumx == 0:
-            LC = this_dist
-            LCT = route
-            MC = this_dist
-            MCT = route
+        # print('Distance:', this_dist)
 
         # Keep totals
         sumx += this_dist
@@ -156,33 +245,66 @@ def exhaustive_search(node_list, number_of_stops, distances, sumx, sumxx, bins, 
         if this_dist < LC:
             LC = this_dist
             LCT = route
+            print('New low:', LCT, 'Distance:', LC)
         elif this_dist > MC:
             MC = this_dist
             MCT = route
+            print('New high:', MCT, 'Distance:', MC)
 
         # Sort cost into bin for histogram of frequencies
-        bins[int((this_dist - min_cost_rt)/dx)] += 1
+        bins[int((this_dist - min_cost_rt) / dx)] += 1
 
     # Stop timer
-    end = time.time()
+    stop = time.time()
+    print(route, this_dist)
 
-    output(sumx, sumxx, number_of_nodes, number_of_stops, LC, LCT, MC, MCT, bins, end, start)
-
-
-def output(sumx, sumxx, number_of_nodes, number_of_stops, LC, LCT, MC, MCT, bins, end, start):
+    # Output
     print('\nSum:', sumx)
     print('Sum squared x:', sumxx)
-    n = Smath.nPr(number_of_nodes, number_of_stops)
-    print('Number of routes:', n)
-    print('Average cost:', sumx/n)
-    stdev = Smath.sqrt((sumxx - ((sumx ** 2) / n)) / n)
+    print('Number of routes:', bigN)
+    print('Average cost:', sumx / bigN)
+    stdev = Smath.sqrt((sumxx - ((sumx ** 2) / bigN)) / bigN)
     print('Standard deviation:', stdev)
     print('Least cost:', LC)
     print('Least cost trip:', LCT)
     print('Most cost:', MC)
     print('Most cost trip:', MCT)
     print('Bins:', bins)
-    print('Time:', end-start, 'seconds')
+    print('Time:', stop - start, 'seconds')
+
+
+def shuffle(idxs):
+    """
+    Performs random swaps n times with random seeded generator
+    :param idxs: Set of items to choose from
+    :type idxs: list, tuple, or dict
+    :return: modified idxs
+    :rtype modified idxs: type(idxs)
+    """
+    n = 32
+    for k in range(n):
+        random.seed()
+        a, b = random.randint(0, 13), random.randint(0, 13)
+        swap(idxs, a, b)
+        # print(idxs)
+    return idxs
+
+
+def swap(mylist, a, b):
+    """
+    Swaps two values
+    :param mylist: order of things to choose from
+    :type mylist: list, tuple, or dict
+    :param a: first index
+    :type a: list/tuple: int; dict: key
+    :param b: second index
+    :type b: list/tuple: int; dict: key
+    :return: none; edits items in place
+    """
+    temp = mylist[a]
+    mylist[a] = mylist[b]
+    mylist[b] = temp
+
 
 
 main()
