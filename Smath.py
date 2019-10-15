@@ -1,6 +1,14 @@
-
-pi = 3.14159265359
+"""
+Author: Steven Tucker
+Purpose: Self-coded mathematical equations to be used (mostly for
+CSC 340)
+"""
+import math
+PI = 3.14159265359
+TWO_PI = 2 * PI
 e = 2.71828
+IMAGINARY = 1j
+
 
 def sqrt(n):
     """
@@ -15,7 +23,8 @@ def sqrt(n):
 
 def distance(x1, y1, x2, y2):
     """
-    Finds the distance between two points with coordinates (x1, y1) and (x2, y2)
+    Finds the distance between two points with coordinates (x1, y1)
+    and (x2, y2)
     :param x1: x-coordinate of first point
     :type x1: float or int
     :param y1: y-coordinate of first point
@@ -33,6 +42,8 @@ def distance(x1, y1, x2, y2):
 def quadEqnSolver(a, b, c):
     """
     Applies the quadratic formula to given coefficients.
+    Quadratic formula: ax^2 + bx + c = 0
+    Gives back 1 solution, 2 real solutions, or 2 complex solutions.
     :param a: leading coefficient of quadratic eqn
     :type a: float or int
     :param b: coefficient of second term in quadratic eqn
@@ -42,24 +53,20 @@ def quadEqnSolver(a, b, c):
     :return x: real roots of equation
     :rtype x: int or float
     """
-    # print('Follow the form of the equation ax^2 + bx + c = 0')
-    # a = int(input('Enter the coefficient for a: '))
-    # b = int(input('Enter the coefficient for b: '))
-    # c = int(input('Enter the coefficient for c: '))
-    d = (b**2) - (4*a*c)
+    discriminant = (b**2) - (4*a*c)
 
-    if d < 0:
-        # print('Zero real solutions')
-        return None
-    elif d == 0:
+    if discriminant < 0:
+        discriminant *= -1
+        upper_sqrt = sqrt(discriminant) * IMAGINARY
+    elif discriminant == 0:
         x = -1*b/(2*a)
-        # print('One solution:', x)
         return x
     else:
-        x1 = (-1*b + sqrt(d)) / (2*a)
-        x2 = (-1*b - sqrt(d)) / (2*a)
-        # print('Two solutions:', x1, ',', x2)
-        return x1, x2
+        upper_sqrt = sqrt(discriminant)
+
+    x1 = ((-1*b) + upper_sqrt) / (2*a)
+    x2 = ((-1*b) - upper_sqrt) / (2*a)
+    return x1, x2
 
 
 def LCM(a, b):
@@ -72,6 +79,9 @@ def LCM(a, b):
     :return: least common multiple
     :rtype: int
     """
+    if type(a) is not int or type(b) is not int:
+        raise TypeError('Input must be float type.')
+
     return a / GCF(a, b) * b
 
 
@@ -85,6 +95,9 @@ def GCF(a, b):
     :return: greatest common factor
     :rtype: int
     """
+    if type(a) is not int or type(b) is not int:
+        raise TypeError('Input must be float type.')
+
     if b > a:
         return GCF(b, a)
 
@@ -143,7 +156,8 @@ def standard_deviation(nums, avg):
     :return: size of one standard deviation
     :rtype; float or int
     """
-    return sqrt(variance(nums, avg, exhaustive = False))
+    return sqrt(variance(nums, avg, exhaustive=False))
+
 
 def factorial(n):
     """
@@ -153,11 +167,11 @@ def factorial(n):
     :return: n!
     :rtype: int
     """
-    if n >= 0 and type(n) is int:
-        if n == 0:
-            return 1
-        else:
-            return n * factorial(n-1)
+    if type(n) is not int:
+        raise TypeError('n must be type int.')
+
+    if n > 1:
+        return n * factorial(n-1)
     else:
         return 1
 
@@ -189,3 +203,68 @@ def nCr(n, r):
     """
     return int(factorial(n)/(factorial(r) * factorial(n-r)))
 
+
+def Fibonacci(n):
+    """
+    Finds the nth term in the Fibonacci Sequence by adding the two
+    previous terms.
+    :param n: index of value
+    :type n: int
+    :return: the nth term i the Fibonacci Sequence
+    :rtype: int
+    """
+    if type(n) is not int:
+        raise TypeError('n must be type int')
+    if n < 0:
+        raise ValueError('n must be positive')
+
+    if n == 0:
+        return 0
+    elif n == 1:
+        return 1
+
+    return Fibonacci(n-1) + Fibonacci(n-2)
+
+
+def cmag(z):
+    """
+    Magnitude of a complex number
+    :param z: complex number to find magnitude
+    :type z: complex
+    :return: magnitude
+    :rtype: float
+    """
+    return sqrt(z.real**2 + z.imag**2)
+
+
+def cphase(z):
+    """
+    Gives the phase of the complex number
+    :param z: a complex number
+    :type z: complex
+    :return: angle in 2d-coords, or phase [-pi, pi]
+    :rtype: float (radians)
+    """
+    return math.atan2(z.imag, z.real)
+
+
+def deg2rad(deg):
+    """
+    Converts degrees to radians
+    :param deg: measurement of degrees
+    :type deg: float or int
+    :return: radians
+    :rtype: float or int
+    """
+    return deg * PI / 180
+
+
+def rad2deg(rad):
+    """
+    Converts radians to degrees
+    :param rad: measurement of radians
+    :type rad: float or int
+    :return: degrees
+    :rtype: float or int
+    """
+    return rad * 180 / PI
